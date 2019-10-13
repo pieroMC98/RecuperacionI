@@ -1,8 +1,8 @@
 #include "practica1.h"
 
 int eraseSign(int i){
-     if( (i > 32 && i < 48) ) return ' ';
-return i;
+     if( (i > 32 && i < 48) ) return 1;
+return 0;
 }
 
 char eraseTilde(char j){
@@ -14,11 +14,6 @@ char eraseTilde(char j){
 return j;
 }
 
-int changeLT(int i){
-    if( i >= 65 && i <=90 ) return i + 32;
-        else if( i >= 97 && i <= 122 ) return i - 32;
-return i;
-}
 
 int openFile(char *file){       
     int f;
@@ -28,10 +23,10 @@ int openFile(char *file){
 return f;
 }
 
-int writeFile(int f, char buffer){
+int writeFile(int f, char *buffer){
     int err;
-        if( write( f,&buffer, sizeof(char)) == -1){
-            err = errno;
+    if( write( f,buffer, sizeof(char)*(strlen(buffer) + 1) ) == -1){
+        err = errno;
         fprintf(stderr,"No se puede escribir en el fichero \"%d\":: %s\n",f,strerror(err));
         return EXIT_FAILURE;
     }
@@ -39,65 +34,74 @@ return EXIT_SUCCESS;
 }
 
 int readFile(int f, char *buffer, int *length){
-     int tam = lseek(f,0,SEEK_END);
+    int tam = lseek(f,0,SEEK_END);
+    int err = errno;
+    
      lseek(f,0,SEEK_SET);
     *length = tam + 1;
     if( read(f,buffer,tam+1) == -1){
-        int err = errno;
         fprintf(stderr,"Error lectura fichero:: %s\n",strerror(err));
         return EXIT_FAILURE;
     }
 return EXIT_SUCCESS;
 }
 
-char** saveWord(int file,int x,int *j,char **out){
+int changeLT(int i){
+    if( i >= 65 && i <=90 ) return i + 32;
+        else if( i >= 97 && i <= 122 ) return i - 32;
+return i;
+}
+
+char** saveWord(int file,int x,int *j,int i,char **out){
     int f = lseek(file,0,SEEK_END);
-    lseek(file,x,SEEK_SET);
-    char *buffer = malloc((10)*sizeof(char)), c;
-    int save = 1;
-   
-        
-    int i = 0, salida = 0;
+            lseek(file,x,SEEK_SET);
+    char *buffer = malloc((100)*sizeof(char)), c;     
+    int save = 1;        
 
-    while( (x + i) < f){
-        read(file,&c,sizeof(char));   
-        if( c != ' '){ 
-            buffer[i] = c;
-            i++;
-        }else {          
+    if( i == f) {
+        //salida = 1;
+        return out;
+    }else{
+        while( (x + i) < f){
+            read(file,&c,sizeof(char));   
+            if( c != ' '){ 
+                buffer[i] = c;
+                i++;
+            }else{      
             x = lseek(file,0,SEEK_CUR);
-          break;
+                buffer[x] = ' ';
+            break;
+            }
+        } 
+
+        for (int i = 0; i < 308; i++){
+            //si ! -> palabra vacia 
+            for (int i = 0; i < (strlen(buffer)+1); i++) buffer[i] = tolower(buffer[i]);
+    
+            if( !strcmp(palabrasVacias[i],buffer) ){            
+            save = 0;
+            break;
+            }
         }
-    } 
+ 
+        if(save == 1){ 
+                buffer = (char*)realloc(buffer,sizeof(char)*(i+1));
+            
+                if( (out = (char**)realloc(out,sizeof(char*)*(*j+1))) == NULL){
+                        printf(" doesnt work\n");
+                }else{
+                        for (int i = 0; i < (*j+1); i++) out[i] = (char*)realloc(out[i],sizeof(char)*20);   
+                }
 
-    if( (x + i) == f ) salida = 1;
-
-
-    for (int i = 0; i < 308; i++){
-        //si ! -> palabra vacia 
-        if( !strcmp(palabrasVacias[i],buffer) ){            
-          // printf("-->%s\n",buffer);
-           save = 0;
-           break;
+                if( out[*j] == NULL)perror("se me ha matao");
+                   strcpy(out[*j],buffer);            
+                    
+                buffer[*j + 1] = '\0';
+                *j = *j +1;
         }
-    }
-   // printf("j = %d \n",j);
-       if(save == 1){ 
-          /*  out = (char**)realloc(out,(j+1)*sizeof(char*));
-           if( out == NULL) fprintf(stderr,"out:: %s",strerror(errno));
-           for (int i = 0; i <= strlen(buffer); i++){               
-            out[i] = (char*)realloc(out[i],(j+1)*sizeof(char));
-            if( out[i] == NULL)  fprintf(stderr,"out:: %s",strerror(errno)); */
         
-           strcpy(out[*j],buffer);
-          printf(" cadena = %s\n",out[*j]);
-           *j = *j +1;
-           //printf(" %d \n",*j);
-        }
-
-    //size_t row = sizeof(out) / sizeof(out[0]);
-    if( !salida ) saveWord(file, x, j,out);
- return out;
+        saveWord(file, x, j,( (x + i) == f ? x + i : 0) ,out);
+    }
 }
 
 int checkText(char *f){
@@ -106,29 +110,38 @@ int checkText(char *f){
 return EXIT_SUCCESS;
 }
 
-void menu(char** F,char **F1,int row){
-    printf("-------------------\n");
-     for (int i = 1; i < row; i++)
-     {
-        printf("file %d: \"%s\"\n",i,F[i]);       
-     }
-     
-    printf("Elija archivo (1...%d) para su visualiazacion y forma normalizada\n",row);
+void menu(char** F,int *files,int *rep,int row){
+    char c;
+    int final, l;
     int option;
+
+    printf("-------------------\n");
+    for (int i = 1; i < row; i++) printf("file %d: \"%s\"\n",i,F[i]);       
+         
+    printf("\nElija archivo (1...%d) para su visualiazacion y forma normalizada\n",row-1);
     scanf("%d",&option);
     option -= 1;
 
     system("clear");
-    printf("%s",F[option]);
-    printf("-----------------");
-    printf("%s",F[option]);
+    printf("%s->\n",F[option]);
+
+    final = lseek(files[option],0,SEEK_END);
+    l     = lseek(files[option],0,SEEK_SET);
+    while ( l <= final){
+        read(files[option],&c,sizeof(char));
+        printf("%c",c);
+        lseek(files[option],0,SEEK_CUR);
+        l++;
+    }
+    printf("\n\n-----------------\n\n");
+    printf("%s->\n",F[option]);
+
+    final = lseek(rep[option],0,SEEK_END);
+    l     = lseek(rep[option],0,SEEK_SET);
+    while ( l <= final){
+        read(rep[option],&c,sizeof(char));
+        printf("%c",c);
+        lseek(rep[option],0,SEEK_CUR);
+        l++;
+    }
 }
-
-int stopWords(char *word,char **stopWords){
-   for (int i = 0; i < 308; i++){
-       if(strcmp(word, stopWords[i]) == 0) return 1;
-   }
-return 0;
-}
-
-
