@@ -4,14 +4,13 @@
     // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
-
+    
         {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/practica1",
-            "args": ["practica1.c","main.c","a.txt", "b.txt", "c,txt"],
+            "args": [ "fichero.txt"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -19,7 +18,7 @@
             "MIMode": "gdb",
             "setupCommands": [
                 {
-                    "description": "Enable pretty-printing for gdb",
+                    "description": "Enable pretty-printing for gdb",        
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }
