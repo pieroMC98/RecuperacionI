@@ -7,21 +7,18 @@
     #include <fcntl.h>
     #include <string.h>
     #include <errno.h>
-   // #include "palabrasVacias"
     int openFile    (char*);
     int writeFile   (int,char*);
     int eraseSign   (int);
     int changeLT    (int);
-    int readFile    (int f, char *buffer,int*);
     int checkText   (char*);
     void menu       (char**,int*,int*,int);
     char eraseTilde (char);
-    char** saveWord (int file,int,int,int*,int,char**);
+    char** saveWord (int file,int,int,int*,int,char**);    
     int busqueda    (int file, char* string );
 
 
    #define ER(i) printf("<-------------------<%d>\n",i); 
-   extern const char *palabrasVacias[];
    #define T 2
 #endif // !_primeraPractica_H
 
