@@ -1,6 +1,7 @@
 #include "practica1.h"
 
 int main(int argc, char const *argv[]) {
+
   int inicial = 50, Menu = 0;
   char c;
   char *s1 = malloc(inicial * sizeof(char));
@@ -10,11 +11,14 @@ int main(int argc, char const *argv[]) {
   int *files = malloc((argc - 1) * sizeof(char)), t,
       *rep = malloc((argc - 1) * sizeof(char)), tout;
 
+  char ***D = (char ***)malloc(sizeof(char **) * (argc - 1));
   int reallocation;
-  int final, u1, l;
+  int final, l;
+ 
+
   int palabrasVacias = open("palabrasVacias", O_RDONLY, 0644);
   if (palabrasVacias == EXIT_FAILURE) {
-    perror("palabras vacias");
+    perror("palabras vacias:");
     return EXIT_FAILURE;
   }
 
@@ -44,18 +48,26 @@ int main(int argc, char const *argv[]) {
     }
   }
 
+  int *R = malloc(sizeof(int) * (argc - 1));
   for (int i = 0; i < argc - 1; i++) {
     reallocation = 1;
     out = (char **)saveWord(files[i], palabrasVacias, 0, &reallocation, 0, out);
-    reallocation--;
-    for (int i = 0; i < reallocation; i++){
-      printf("[%d] = \"%s\"\n",i,s1);
+    D[i] = (char **)malloc(reallocation * sizeof(char *));
+    for (int l = 0; l < reallocation; l++)
+      D[i][l] = (char *)malloc(sizeof(char) * (strlen(out[i]) + 1));
+
+    for (int z = 0; z < (reallocation - 1); z++) {
+      strcpy(D[i][z], out[z]);
+      for (int u = 0; u < (strlen(D[i][z]) + 1); u++)
+        if (eraseSign(D[i][z][u]))
+          D[i][z][u] = '\0';
     }
-    
+
+    R[i] = --reallocation;
 
     lseek(rep[i], 0, SEEK_SET);
     for (int j = 0; j < reallocation; j++) {
-      tout = strlen(out[j])+1;
+      tout = strlen(out[j]) + 1;
       strcpy(s1, out[j]);
       for (int k = 0; k < tout; k++) {
         if (s1[k] == ' ')
@@ -81,7 +93,7 @@ int main(int argc, char const *argv[]) {
           s1 = (char *)realloc(s1, sizeof(char) * tout);
         }
       }
-      printf("save = \"%s\"\n",s1);
+
       if (writeFile(rep[i], s1) == EXIT_FAILURE)
         exit(EXIT_FAILURE);
     }
@@ -104,22 +116,38 @@ int main(int argc, char const *argv[]) {
   do {
     system("clear");
     menu((char **)argv, files, rep, argc);
-    printf("\n---------\n%d -1 :: exit()\n",reallocation);
-    scanf("%d", &Menu);
+    printf("\n---------\n%d -1 :: exit()\n", reallocation);
+    scanf("%d%*c", &Menu);
     Menu = Menu == -1 ? -1 : 0;
   } while (!Menu);
 
+  int pos;
+  char **aux = addQuery(&pos);
+
+  string salida = operation(aux, pos, D, argc - 1, R);
+  printf("resultado de la consulta: ");
+  for (int i = 0; i < salida.i; i++) {
+    printf("%d ", salida.r[i]);
+  }
+
+  printf("\n");
+  for (int i = 0; i < (argc - 1); i++)
+    for (int j = 0; j < R[i]; j++)
+      free(D[i][j]);
+
+  /* for (int i = 0; i < reallocation; i++){
+   printf("%d=\"%s\"\n",i, out[i]);
+
+   //free(out[i]);
+    } */
   int err;
   for (int i = 0; i < argc - 1; i++) {
-
     if (close(files[i]) == -1 || close(rep[i]) == -1) {
       err = errno;
       fprintf(stderr, "file %d: %s", i, strerror(err));
       exit(EXIT_FAILURE);
     }
   }
-  printf("\n");
   free(s1);
-  free(out);
   return EXIT_SUCCESS;
 }

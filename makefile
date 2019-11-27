@@ -1,9 +1,8 @@
 src = main.c practica1.c
 object = practica1
-#file = c.txt
-#file = a.txt  b.txt  c.txt
-file = prueba.txt 
-
+file = a.txt  b.txt  c.txt d.txt
+#file = fichero.txt 
+#file = normalizar.txt
 $(object) : $(src)
 	gcc -Wall -g $(src) -o $(object)
 

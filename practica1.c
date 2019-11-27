@@ -19,16 +19,23 @@ int eraseSign(int i) {
  * @return j, carácter sin tilde
  */
 char eraseTilde(char j) {
-  if (j == -95)
+  switch (j) {
+  case -95:
     return 'a';
-  else if (j == -87)
+    break;
+  case -87:
     return 'e';
-  else if (j == -83)
+    break;
+  case -83:
     return 'i';
-  else if (j == -77)
+    break;
+  case -77:
     return 'o';
-  else if (j == -70)
+    break;
+  case -70:
     return 'u';
+    break;
+  }
   return j;
 }
 
@@ -92,11 +99,11 @@ int changeLT(int i) {
  * @return char**
  */
 
-int busqueda(int file, char *string) {
+int search(int file, char *string) {
   int final = lseek(file, 0, SEEK_END);
   lseek(file, 0, SEEK_SET);
   int j;
-  char *buffer = malloc(10 * sizeof(char));
+  char *buffer = malloc(50 * sizeof(char));
   char c;
   int g = 0;
 
@@ -108,19 +115,29 @@ int busqueda(int file, char *string) {
         buffer[j] = '\0';
         break;
       }
+
       buffer[j] = c;
       g = lseek(file, 0, SEEK_CUR);
       j++;
-    } while ((c != 44) && (g < 2071));
-    lseek(file, 1, SEEK_CUR);
+      // getchar();
+      if (g >= final) {
+        buffer[j] = '\0';
+        break;
+      }
 
-    buffer = realloc(buffer, (j) * sizeof(char));
+    } while ((c != 44));
+    lseek(file, 1, SEEK_CUR);
+    buffer = realloc(buffer, (j + 1) * sizeof(char));
+
     for (int i = 0; i < (strlen(buffer) + 1); i++)
       buffer[i] = tolower(buffer[i]);
+    // equals
+    if (!strcmp(string, buffer)) {
 
-    if (!strcmp(string, buffer))
       return 1;
+    }
   }
+
   return 0;
 }
 
@@ -140,25 +157,28 @@ char **saveWord(int file, int PV, int x, int *j, int i, char **out) {
         i++;
       } else {
         x = lseek(file, 0, SEEK_CUR);
+
         buffer[i] = '\0';
         break;
       }
     }
-
-    save = busqueda(PV, buffer);
+    save = search(PV, buffer);
     if (!save) {
       buffer = (char *)realloc(buffer, sizeof(char) * (strlen(buffer) + 1));
-      if ((out = (char **)realloc(out, sizeof(char *) *(*j+1))) == NULL) {
+      int k = *j + 1;
+      k = f;
+
+      if ((out = (char **)realloc(out, sizeof(char *) * (k))) == NULL) {
         fprintf(stderr, "out: %s\n", strerror(errno));
       } else {
-        for (int i = 0; i <(*j+1); i++){          
-          if( (out[i] = (char *)realloc(out[i], sizeof(char) * (strlen(buffer) + 1))) == NULL) 
-              fprintf(stdout, "out[%d] = %s\n",i,strerror(errno));
+        for (int i = 0; i < (k); i++) {
+          if ((out[i] = (char *)realloc(
+                   out[i], sizeof(char) * (strlen(buffer) + 1))) == NULL)
+            fprintf(stdout, "out[%d] = %s\n", i, strerror(errno));
         }
-        out[*j] = NULL;       
-    
+        out[*j] = NULL;
       }
-        perror("out:");
+      perror("out:");
       strcpy(out[*j - 1], buffer);
       *j = *j + 1;
     }
@@ -175,7 +195,9 @@ char **saveWord(int file, int PV, int x, int *j, int i, char **out) {
  */
 int checkText(char *f) {
   int t = strlen(f) + 1;
- return f[t] != 't' && f[t - 1] != 'x' && f[t - 2] != 't' && f[t - 3] != '.' ? EXIT_FAILURE : EXIT_SUCCESS;
+  return f[t] != 't' && f[t - 1] != 'x' && f[t - 2] != 't' && f[t - 3] != '.'
+             ? EXIT_FAILURE
+             : EXIT_SUCCESS;
 }
 
 /**
@@ -187,6 +209,7 @@ int checkText(char *f) {
  * @param rep, tupla de descriptores de ficheros normalizados .rep
  * @param row, numero de ficheros
  */
+
 void menu(char **F, int *files, int *rep, int row) {
   char c;
   int final, l;
@@ -207,7 +230,7 @@ void menu(char **F, int *files, int *rep, int row) {
 
   final = lseek(files[option], 0, SEEK_END);
   l = lseek(files[option], 0, SEEK_SET);
-  while (l <= final) {
+  while (l < final) {
     read(files[option], &c, sizeof(char));
     printf("%c", c);
     lseek(files[option], 0, SEEK_CUR);
@@ -218,10 +241,202 @@ void menu(char **F, int *files, int *rep, int row) {
 
   final = lseek(rep[option], 0, SEEK_END);
   l = lseek(rep[option], 0, SEEK_SET);
-  while (l <= final) {
+  while (l < final) {
     read(rep[option], &c, sizeof(char));
     printf("%c", c);
     lseek(rep[option], 0, SEEK_CUR);
     l++;
   }
+}
+
+char **addQuery(int *size) {
+  char **string = NULL;
+  char *aux = malloc(sizeof(char) * 100);
+  printf("Introduzca su consulta( sin comas entre ellos ): \n");
+   fgets(aux, 100, stdin);
+  //char aux[] = "barco, casa, coche, gato, perro";
+  int l = strlen(aux), i = 0;
+  char *token = malloc((l + 1) * sizeof(char));
+  char *aux1 = malloc((l + 1) * sizeof(char));
+  const char *delim = " \n";
+
+  int k = 0;
+  strcpy(aux1, aux);
+  token = strtok(aux, delim);
+  while (token != NULL) {
+    token = strtok(NULL, delim);
+    k++;
+  }
+
+  char *token1 = strtok(aux1, delim);
+
+  string = (char **)malloc((k) * sizeof(char *));
+  while (token1 != NULL) {
+    string[i] = (char *)malloc(sizeof(char) * (strlen(token1) + 1));
+
+    strcpy(string[i], token1);
+    token1 = strtok(NULL, delim);
+    i++;
+  }
+  *size = k;
+  for (int i = 0; i < k; i++)
+    printf(">\"%s\"\n", string[i]);
+
+  return string;
+}
+
+string operation(char **vocabulario, int t, char ***terms, int x, int *c) {
+  int option, bool = 0, **VAR = NULL;
+  int g = 0, g3 = 0, g1, *resultado = calloc(sizeof(int), 20);
+  int aux;
+  int op1, op2;
+  int count = 0;
+   string n;
+   n.r = NULL;
+   n.i = 0;
+  char **Vocabulario = (char **)malloc(sizeof(char) * 1);
+
+  int k = 0, h = 0;
+  for (int k = 0; k < 1; k++)
+    Vocabulario[k] = (char *)malloc(sizeof(char) * 20);
+
+  for (int i = 0; i < x; i++) {
+    for (int j = 0; j < c[i]; j++) {
+      Vocabulario = (char **)realloc(Vocabulario, sizeof(char *) * (c[i] + k));
+      for (int k1 = k; k1 < (c[i] + k); k1++)
+        Vocabulario[k1] =
+            (char *)malloc(sizeof(char) * (strlen(terms[i][j]) + 1));
+      for (int u = 0; u < t; u++) {
+        if (!strcmp(vocabulario[u], terms[i][j])) {
+          bool = 1;
+          break;
+        } else
+          bool = 0;
+      }
+      if (bool) {
+        strcpy(Vocabulario[k], terms[i][j]);
+        k++;
+      }
+    }
+    if (bool)
+      h += c[i];
+  }
+
+  for (int i = 0; i < h; i++) {
+    for (int j = h - 1; j > i; j--) {
+      if (!strcmp(Vocabulario[j], Vocabulario[i])) {
+        for (int k = j + 1; k < h; k++)
+          strcpy(Vocabulario[k - 1], Vocabulario[k]);
+        h--;
+        Vocabulario = (char **)realloc(Vocabulario, sizeof(char *) * h);
+      }
+    }
+  }
+  VAR = (int **)malloc(sizeof(int *) * (h));
+  for (int i = 0; i < h; i++)
+    VAR[i] = (int *)calloc(sizeof(int), c[i]);
+
+  for (int i = 0; i < h; i++) {
+    aux = 0;
+    for (int j = 0; j < x; j++) {
+      for (int k = 0; k < c[j]; k++) {
+        if (!strcmp(Vocabulario[i], terms[j][k])) {
+          VAR[i][aux] = j + 1;
+          aux++;
+          break;
+        }
+      }
+    }
+  }
+
+  printf("\noperacion a realizar:: 1 -> AND, 2 -> OR, 3->NOT\n");
+  scanf("%d", &option);
+  printf("Introduzca los ficheros a operar por numero( espacio entre ellos)\n");
+  for (int i = 0; i < h; i++) {
+    printf("[ %d ] = %s\n", i + 1, Vocabulario[i]);
+  }
+  scanf("%d %d", &op1, &op2);
+  op1--;
+  op2--;
+
+  int salida = 0;
+  switch (option) {
+  case 1:
+    while (VAR[op1][g] != 0) {
+      g1 = 0;
+      while (VAR[op2][g1] != 0) {
+        if (VAR[op1][g] == VAR[op2][g1]) {
+          resultado[g3] = VAR[op1][g];
+          g3++;
+          break;
+        };
+        g1++;
+      }
+      g++;
+    }
+
+    salida = g3;
+    break;
+  case 2:
+    g = 0;
+    while (VAR[op1][g] != 0) {
+      resultado[g] = VAR[op1][g];
+      printf("[%d] = %d\n", resultado[g], VAR[op1][g]);
+      g++;
+      resultado = (int *)realloc(resultado, sizeof(int) * (g + 1));
+    }
+
+    g1 = g;
+    g = 0;
+    while (VAR[op2][g] != 0) {
+      resultado[g1 + g] = VAR[op2][g];
+      g++;
+      resultado = (int *)realloc(resultado, sizeof(int) * (g1 + g + 1));
+    }
+
+    count = g + g1;
+
+    for (int i = 0; i < count; i++) {
+      for (int j = (count - 1); j > i; j--) {
+
+        if (resultado[i] == resultado[j]) {
+          for (int k = j; k < (count - 1); k++) {
+            resultado[k] = resultado[k + 1];
+          }
+          count--;
+          resultado = (int *)realloc(resultado, sizeof(int) * count);
+        }
+      }
+    }
+    salida = count;
+    break;
+  case 3:
+
+    while (VAR[op1][g] != 0) {
+      g1 = 0;
+      while (VAR[op2][g1] != 0) {
+        if (VAR[op1][g] != VAR[op2][g1]) {
+          resultado[g3] = VAR[op1][g];
+          g3++;
+          break;
+        } else if (VAR[op1][g] == VAR[op2][g1]) {
+          resultado[g3] = 0;
+          g3++;
+          break;
+        }
+        g1++;
+      }
+      g++;
+    }
+    salida = g3;
+
+    break;
+  default:
+    return n;
+    break;
+  }
+ 
+  n.r = resultado;
+  n.i = salida;
+  return n;
 }
