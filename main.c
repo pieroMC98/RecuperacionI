@@ -125,10 +125,11 @@ int main(int argc, char const *argv[]) {
   char **aux = addQuery(&pos);
 
   string salida = operation(aux, pos, D, argc - 1, R);
-  printf("resultado de la consulta: ");
+  printf("resultado de la consulta: {");
   for (int i = 0; i < salida.i; i++) {
-    printf("%d ", salida.r[i]);
+    printf("d%d ", salida.r[i]);
   }
+  printf("}");
 
   printf("\n");
   for (int i = 0; i < (argc - 1); i++)
