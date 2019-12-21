@@ -1,9 +1,24 @@
 #include "practica3.h"
+
 int main(int argc, char const *argv[]) {
-  int *files = NULL, *filesREP = NULL;
-  NODO *nodo, *file;
+  int *files = NULL, *filesREP = NULL, **vectors = NULL;
+
   char **param = (char **)argv;
   int arg = argc - 1;
+  int lengt = 0;
+  int **r = (int **)malloc(sizeof(int *) * arg);
+  NODO *q = addQuery();
+  int *Q = NULL;
+
+  vectors = (int **)malloc(sizeof(int) * arg);
+  for (int i = 0; i < arg; i++)
+    vectors[i] = (int *)malloc(sizeof(int) * 10);
+
+  int pv = open("palabrasVacias", O_RDONLY, 0777);
+
+  NODO **aux = (NODO **)malloc(arg * sizeof(NODO *)), *l = NULL;
+  for (int i = 0; i < arg; i++)
+    aux[i] = NULL;
 
   if (argc < 2) {
     printf("Parametros insuficientes\n");
@@ -22,13 +37,14 @@ int main(int argc, char const *argv[]) {
     return EXIT_FAILURE;
   }
 
-  int pv = open("palabrasVacias", O_RDONLY, 0777);
-  nodo = tokenizeFile(pv);
-  // imprimirlista(&nodo);
+  final(arg, aux, files, pv, &l, r, &lengt, &q, &Q);
+  screen(aux, lengt, r, Q, l, arg);
+  writeRep(filesREP, aux, arg);
   
-  file = tokenizeFile(files[0]);
-  NODO *n = normalizar(file,nodo);
-  imprimirlista(&n);
+  for (int i = 0; i < arg; i++) {
+    close(files[i]);
+    close(filesREP[i]);
+  }
 
   return EXIT_SUCCESS;
 }
